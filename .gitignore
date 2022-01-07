@@ -2,3 +2,4 @@ venv/
 .env
 *.pyc
 app/images
+*__pycache__/

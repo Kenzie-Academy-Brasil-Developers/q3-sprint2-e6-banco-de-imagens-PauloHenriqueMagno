@@ -1,14 +1,16 @@
 import os
 from flask import Flask, request, jsonify, send_file
 from .kenzie.image import upload_image, zip_files
-
-files_directory = os.getenv('FILES_DIRECTORY')
-allowed_extensions = os.getenv('ALLOWED_EXTENSIONS').split(',')
+from werkzeug.exceptions import RequestEntityTooLarge
 
 app = Flask(__name__)
 
+files_directory = os.getenv('FILES_DIRECTORY')
+allowed_extensions = os.getenv('ALLOWED_EXTENSIONS').split(',')
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
+
 @app.get("/files")
-def get_files_list():
+def list_files():
     files = []
     for extension in allowed_extensions:
         files += os.listdir(f"{files_directory}/{extension}")
@@ -16,18 +18,18 @@ def get_files_list():
     return jsonify(files), 200
 
 @app.get("/files/<extension>")
-def get_files_by_extension(extension: str):
+def list_files_by_extension(extension: str):
     extension = str(extension)
 
     if extension not in allowed_extensions:
-        return jsonify({'message': 'extension not found'}), 400
+        return jsonify({'message': 'extension not found'}), 404
 
     files_list = os.listdir(f"{files_directory}/{extension}")
 
     return jsonify(files_list), 200
 
 @app.get("/download/<file_name>")
-def get_file(file_name: str):
+def download(file_name: str):
     file_name = str(file_name).lower()
     file_extension = file_name.split('.')
     file_extension = str(file_extension[len(file_extension)-1])
@@ -41,9 +43,12 @@ def get_file(file_name: str):
     ), 200
 
 @app.get("/download-zip")
-def get_zip_files():
+def download_dir_as_zip():
     return zip_files(request.args)
 
 @app.post("/upload")
-def post_files():
-    return upload_image(request.files)
+def upload():
+    try:
+        return upload_image(request.files)
+    except RequestEntityTooLarge:
+        return jsonify({'message': 'Max file size 1mb'}), 413

@@ -9,8 +9,6 @@ def check_and_create_directory():
         os.mkdir(files_directory)
         for extension in allowed_extensions:
             os.mkdir(f"{files_directory}/{extension}")
-    if "tmp" not in os.listdir("./app"):
-        os.mkdir("./app/tmp")
 
 check_and_create_directory()
 
@@ -44,10 +42,10 @@ def zip_files(args):
     if file_extension not in allowed_extensions:
         return jsonify({'message': 'File extension do not exist'}), 404
 
-    os.system(f"cd app/images/{file_extension} && zip -{compression_ratio} -r files * && mv files.zip ../../tmp")
+    os.system(f"cd app/images/{file_extension} && zip -{compression_ratio} -r files * && mv {file_extension}.zip /tmp")
 
     return send_from_directory(
         directory = "/tmp",
-        path="files.zip",
+        path=f"{file_extension}.zip",
         as_attachment=True
     )
