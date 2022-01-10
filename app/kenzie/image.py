@@ -33,7 +33,7 @@ def upload_image(files):
     return jsonify(os.listdir(f"{files_directory}/{file_extension}")), 201
 
 def zip_files(args):
-    file_extension = str(args.get('file_extension'))
+    file_extension = str(args.get('file_extension').lower())
     compression_ratio = int(args.get('compression_ratio', 6))
 
     if not file_extension:
@@ -42,7 +42,7 @@ def zip_files(args):
     if file_extension not in allowed_extensions:
         return jsonify({'message': 'File extension do not exist'}), 404
 
-    os.system(f"cd app/images/{file_extension} && zip -{compression_ratio} -r files * && mv {file_extension}.zip /tmp")
+    os.system(f"cd app/images/{file_extension} && zip -{compression_ratio} -r {file_extension} * && mv {file_extension}.zip /tmp")
 
     return send_from_directory(
         directory = "/tmp",
